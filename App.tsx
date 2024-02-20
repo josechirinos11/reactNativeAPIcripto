@@ -1,118 +1,111 @@
-/**
- * Sample React Native App
- * https://github.com/facebook/react-native
- *
- * @format
- */
 
 import React from 'react';
-import type {PropsWithChildren} from 'react';
+import { useEffect, useState } from 'react';
 import {
-  SafeAreaView,
   ScrollView,
-  StatusBar,
+  ActivityIndicator,
+  Image,
   StyleSheet,
   Text,
-  useColorScheme,
+  
   View,
 } from 'react-native';
 
-import {
-  Colors,
-  DebugInstructions,
-  Header,
-  LearnMoreLinks,
-  ReloadInstructions,
-} from 'react-native/Libraries/NewAppScreen';
+import Header from './components/Header';
+import Cotizacion from './components/Cotizacion';
+import Formulario from './components/Formulario';
+import axios from 'axios';
 
-type SectionProps = PropsWithChildren<{
-  title: string;
-}>;
 
-function Section({children, title}: SectionProps): React.JSX.Element {
-  const isDarkMode = useColorScheme() === 'dark';
+const App = () => {
+  const [moneda, setMoneda] = useState('')
+  const [criptomoneda, setCriptomoneda] = useState('')
+  const [consultarApi, setConsultarApi] = useState(false)
+  const [resultado,setResultado] = useState({})
+  const [ cargando, guardarCargando] = useState(false);
+
+  useEffect(() => {
+
+    console.log(moneda)
+    console.log(criptomoneda)
+
+    const cotizarCriptoMoneda = async () => {
+      if(consultarApi){
+        // consultar a la api
+        const url=`https://min-api.cryptocompare.com/data/pricemultifull?fsyms=${criptomoneda}&tsyms=${moneda}`
+        
+        const resultado = await axios.get(url)
+        console.log(resultado.data.DISPLAY)
+        setResultado(resultado.data.DISPLAY)
+       
+        setConsultarApi(false)
+
+
+         // console.log(resultado.data.DISPLAY[criptomoneda][moneda] );
+         guardarCargando(true);
+
+         // Ocultar el spinner y mostrar el resultado
+         setTimeout(() => {
+          setResultado(resultado.data.DISPLAY[criptomoneda][moneda] );
+          setConsultarApi(false);
+             guardarCargando(false);
+             
+         }, 3000);
+
+
+
+
+      }
+
+    }
+
+
+    cotizarCriptoMoneda()
+  
+    
+  },[consultarApi])
+
+  
+  // mostrar el spinner o el resultado
+  const componente = cargando ? <ActivityIndicator size="large" color="#5E49E2" /> : <Cotizacion  resultado={resultado} />
+
   return (
-    <View style={styles.sectionContainer}>
-      <Text
-        style={[
-          styles.sectionTitle,
-          {
-            color: isDarkMode ? Colors.white : Colors.black,
-          },
-        ]}>
-        {title}
-      </Text>
-      <Text
-        style={[
-          styles.sectionDescription,
-          {
-            color: isDarkMode ? Colors.light : Colors.dark,
-          },
-        ]}>
-        {children}
-      </Text>
-    </View>
-  );
-}
+    <>
+     <ScrollView>
+     <Header />
+     <Image 
+     style={styles.imagen}
+     source={require('./assets/img/cryptomonedas.png')}
+     />
+     <View style={styles.contenido}>
+     <Formulario
+     moneda={moneda}
+     criptomoneda={criptomoneda}
+     setMoneda={setMoneda}
+     setCriptomoneda={setCriptomoneda}
+     setConsultarApi={setConsultarApi}
+     setResultado={setResultado}
+     />
+     </View>
 
-function App(): React.JSX.Element {
-  const isDarkMode = useColorScheme() === 'dark';
-
-  const backgroundStyle = {
-    backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
-  };
-
-  return (
-    <SafeAreaView style={backgroundStyle}>
-      <StatusBar
-        barStyle={isDarkMode ? 'light-content' : 'dark-content'}
-        backgroundColor={backgroundStyle.backgroundColor}
-      />
-      <ScrollView
-        contentInsetAdjustmentBehavior="automatic"
-        style={backgroundStyle}>
-        <Header />
-        <View
-          style={{
-            backgroundColor: isDarkMode ? Colors.black : Colors.white,
-          }}>
-          <Section title="Step One">
-            Edit <Text style={styles.highlight}>App.tsx</Text> to change this
-            screen and then come back to see your edits.
-          </Section>
-          <Section title="See Your Changes">
-            <ReloadInstructions />
-          </Section>
-          <Section title="Debug">
-            <DebugInstructions />
-          </Section>
-          <Section title="Learn More">
-            Read the docs to discover what to do next:
-          </Section>
-          <LearnMoreLinks />
+     <View style={{ marginTop: 40 }}>
+          {componente}
         </View>
-      </ScrollView>
-    </SafeAreaView>
+        </ScrollView>
+    </>
   );
 }
 
 const styles = StyleSheet.create({
-  sectionContainer: {
-    marginTop: 32,
-    paddingHorizontal: 24,
+  imagen: {
+    width: '100%',
+    height: 250,
+    marginHorizontal: '2.5%'
   },
-  sectionTitle: {
-    fontSize: 24,
-    fontWeight: '600',
-  },
-  sectionDescription: {
-    marginTop: 8,
-    fontSize: 18,
-    fontWeight: '400',
-  },
-  highlight: {
-    fontWeight: '700',
-  },
+  contenido: {
+    marginHorizontal: '2.5%'
+  }
+ 
 });
 
 export default App;
